@@ -1,0 +1,15 @@
+
+[PASS] 链路自检 — 裸模型回复就绪
+[PASS] C1 系统提示注入 — 主智能体确认含该规范：有，该条以「不无条件附和用户」开头。
+[PASS] C2 派生+上下文独立 — 子智能体独立读出暗号：子智能体的完整回复如下：
+
+---
+
+**[子智能体 验证员 | session r
+[PASS] C4 身份声明自动注入 — 逐字命中模板
+[PASS] C5 无 spawn_agent — 子智能体确认工具清单无 spawn_agent
+[PASS] C3 续聊 — 第三轮答出暗号，注册表 turns=3
+[PASS] 注册表落盘 — /Users/apple/.pi/agent/my-agent-sessions.json 中 rv-a-1788313586 turns>=3 且元数据完整
+[PASS] C6a 对照组（--no-skills） — 禁用发现后回复无技能区块：无
+[PASS] C6b 技能发现（symlink） — 6 个技能全部列出：code-cluster, coder-role, doc-manager, humanizer-zh, parallel-dispatch, reviewer-role
+[PASS] C6c 技能内容读取 — read 路径命中且内容正确

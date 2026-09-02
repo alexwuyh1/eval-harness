@@ -1,0 +1,7 @@
+{
+  "name": "my-agent",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "pi 编排扩展：spawn_agent 派生/续聊子智能体"
+}
