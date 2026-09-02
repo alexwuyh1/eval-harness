@@ -1,0 +1,11 @@
+{"ts":"2026-09-02T05:35:04.517Z","model":"deepseek-v4-flash-0731","run":1,"ttftMs":1135,"totalMs":7144,"genMs":6009,"throughputTokS":122.2,"promptTokens":140,"completionTokens":448,"contentChars":734}
+{"ts":"2026-09-02T05:35:10.355Z","model":"deepseek-v4-flash-0731","run":2,"ttftMs":922,"totalMs":5834,"genMs":4912,"throughputTokS":125.2,"promptTokens":140,"completionTokens":386,"contentChars":615}
+{"ts":"2026-09-02T05:35:17.193Z","model":"deepseek-v4-flash-0731","run":3,"ttftMs":788,"totalMs":6836,"genMs":6048,"throughputTokS":130.6,"promptTokens":140,"completionTokens":483,"contentChars":790}
+{"ts":"2026-09-02T05:35:36.843Z","model":"deepseek-v4-pro-0813","run":1,"ttftMs":877,"totalMs":19649,"genMs":18772,"throughputTokS":0,"promptTokens":140,"completionTokens":800,"contentChars":0}
+{"ts":"2026-09-02T05:35:56.271Z","model":"deepseek-v4-pro-0813","run":2,"ttftMs":861,"totalMs":19427,"genMs":18566,"throughputTokS":0,"promptTokens":140,"completionTokens":800,"contentChars":0}
+{"ts":"2026-09-02T05:36:14.920Z","model":"deepseek-v4-pro-0813","run":3,"ttftMs":916,"totalMs":18649,"genMs":17732,"throughputTokS":0,"promptTokens":140,"completionTokens":800,"contentChars":0}
+{"ts":"2026-09-02T05:36:31.802Z","model":"glm-5.2","run":1,"ttftMs":463,"totalMs":16880,"genMs":16417,"throughputTokS":0,"promptTokens":71,"completionTokens":800,"contentChars":0}
+{"ts":"2026-09-02T05:36:48.868Z","model":"glm-5.2","run":2,"ttftMs":600,"totalMs":17066,"genMs":16466,"throughputTokS":0,"promptTokens":71,"completionTokens":800,"contentChars":0}
+{"ts":"2026-09-02T05:37:04.409Z","model":"glm-5.2","run":3,"ttftMs":637,"totalMs":15540,"genMs":14903,"throughputTokS":0,"promptTokens":71,"completionTokens":801,"contentChars":0}
+{"ts":"2026-09-02T05:38:39.560Z","model":"kimi-k3","run":1,"ttftMs":8753,"totalMs":95151,"genMs":86398,"throughputTokS":7,"promptTokens":141,"completionTokens":2961,"contentChars":609}
+{"ts":"2026-09-02T05:39:37.386Z","model":"kimi-k3","run":2,"ttftMs":11343,"totalMs":57825,"genMs":46481,"throughputTokS":12.1,"promptTokens":141,"completionTokens":1730,"contentChars":561}
