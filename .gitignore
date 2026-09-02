@@ -2,3 +2,5 @@ node_modules/
 *.log
 .DS_Store
 # 密钥不落盘：models.json 只含 $ENV 引用，真值在 ~/.zshrc
+# 测试产物：每次运行产生独立 perf-*.jsonl，不提交
+probe/results/

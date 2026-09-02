@@ -5,6 +5,6 @@
   "type": "module",
   "description": "pi 编排扩展：spawn_agent 派生/续聊子智能体",
   "scripts": {
-    "probe": "node scripts/probe.mjs"
+    "probe": "node probe/probe.mjs"
   }
 }
