@@ -12,9 +12,9 @@ pi CLI 的多智能体编排扩展：给 pi 加上派生子智能体（身份声
 
 ```
 my-agent/
-├── models.json        # DashScope provider 配置（apiKey 只含 $ENV 引用，真值不落盘）
-├── extensions/        # 编排扩展（spawn_agent 工具 + /spawned 命令 + session 注册表）
+├── models.json        # 模型与端点配置（改模型/换端点/调上下文窗口改这里；apiKey 只含 $ENV 引用，真值不落盘）
+├── extensions/        # 编排机制层：spawn_agent、续聊、身份声明注入（改编排能力改这里）
 └── test-lab/          # 自测素材
 ```
 
-扩展经 `~/.pi/agent/extensions/my-agent` symlink 被 pi 全局自动发现。
+规则层（规范/技能）不在本仓库：在知识库，经 symlink 常驻到 `~/.pi/agent/` 和 `~/.agents/skills/`。改流程规则去知识库改，改完 Zed 和 pi 同时生效。
