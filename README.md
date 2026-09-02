@@ -4,15 +4,14 @@ pi CLI 的多智能体编排扩展：给 pi 加上派生子智能体（身份声
 
 ## 怎么跑
 
-前置依赖：pi CLI（@earendil-works/pi-coding-agent）；DashScope API key 写在 ~/.zshrc 的 `DASHSCOPE_PROGRAM_KEY`；模型端点走 DashScope OpenAI 兼容模式。
+前置依赖：pi CLI（@earendil-works/pi-coding-agent）；DashScope API key 在 ~/.zshenv 的 `DASHSCOPE_PROGRAM_KEY`；模型端点走 DashScope OpenAI 兼容模式。
 
-启动：`sh my-agent.sh`（交互式）；非交互用 `sh my-agent.sh -p "任务"`。
+启动：`pi`（交互式）；非交互用 `pi -p "任务"`。规范、技能、扩展、默认模型全部常驻在 `~/.pi/agent/` 和 `~/.agents/skills/` 的 symlink 上，无需启动参数。
 
 ## 目录结构
 
 ```
 my-agent/
-├── my-agent.sh        # 一行启动：注入密钥 env + 扩展 + AGENTS.md + 默认模型
 ├── models.json        # DashScope provider 配置（apiKey 只含 $ENV 引用，真值不落盘）
 ├── extensions/        # 编排扩展（spawn_agent 工具 + /spawned 命令 + session 注册表）
 └── test-lab/          # 自测素材
