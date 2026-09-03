@@ -7,8 +7,9 @@ pi CLI 的多智能体编排扩展：给 pi 加上派生子智能体（身份声
 前置依赖：pi CLI（@earendil-works/pi-coding-agent）；DashScope API key 在 ~/.zshenv 的 `DASHSCOPE_CODING_KEY`；模型端点走 DashScope OpenAI 兼容模式。
 
 启动：
+- 前端可视化：`cd view && bun run dev`（同时起后端 API + Vite dev，浏览器开 localhost:5173）
 - 交互式：`pi`（加载编排扩展+AGENTS+技能）
-- 评测框架：`npm run eval` 或 `node probe/eval.mjs [--difficulty easy|medium|hard] [--question-id <id>]`
+- 评测框架：`npm run eval` 或 `node probe/eval.mjs [--mode standard] [--difficulty easy|medium|hard] [--question-id <id>]`
 - 旧探针：`npm run probe`（API 层性能基线）
 
 规范、技能、扩展、models.json 全部常驻在 `~/.pi/agent/` 和 `~/.agents/skills/` 的 symlink 上，无需启动参数。
@@ -22,9 +23,12 @@ my-agent/
 ├── extensions/        # 编排机制层：spawn_agent、续聊、身份声明注入（改编排能力改 index.ts）
 ├── probe/
 │   ├── eval.mjs       # P1.1 统一评测框架（pi CLI 驱动，多模型并行，采集指标+执行测试用例+评分）
+│   ├── eval.config.json # 测试参数（权重/惩罚/超时/难度/标准模式，调参不改代码）
 │   ├── probe.mjs      # 旧探针（HTTP 流式，API 层性能基线）
 │   ├── datasets/      # 数据集（humaneval/livecodebench，首次运行自动下载，gitignore）
-│   └── results/       # 测试产物 JSONL（gitignore）
+│   └── results/       # 测试产物 JSONL（累积，gitignore）
+├── view/              # P3 前端可视化（bun+Vite+UnoCSS+Preact）
+├── models-archive.json # 放弃用模型归档（无权限，开通后取回 models.json）
 └── test-lab/          # P0 编排自测沙盒（run-tests.sh 验证 C1-C6）
 ```
 
