@@ -29,6 +29,9 @@ const AGENTS_MD_PATH = '/Users/apple/知识库/技能/AGENTS.md';
 // 测试配置（eval.config.json）：评分权重/惩罚系数/超时/难度/标准模式/maxQuestions，调参不改代码
 const CONFIG = JSON.parse(readFileSync(CONFIG_PATH, 'utf8'));
 
+// 失败类型中文（记录与展示统一中文）：PASS=通过 CE=编译错误 RE=运行异常 WA=答案错误 TLE=超时
+const FAIL_TYPE = { PASS: '通过', CE: '编译错误', RE: '运行异常', WA: '答案错误', TLE: '超时', TIMEOUT: '超时' };
+
 // ───────────────────────── CLI 参数 ─────────────────────────
 // CLI flag 配置表：flag名 → { key, type, default }。parseArgs 遍历匹配，无 if/else 链
 const CLI_FLAGS = [
@@ -490,13 +493,13 @@ function runTestCase(code, tc) {
   } catch (err) {
     const stderr = (err.stderr ?? '').toString();
     // 超时
-    if (err.killed || err.signal === 'SIGTERM') return { status: 'TLE' };
+    if (err.killed || err.signal === 'SIGTERM') return { status: FAIL_TYPE.TLE, stderr: '' };
     // 语法/编译错误
     if (stderr.includes('SyntaxError') || stderr.includes('IndentationError') || stderr.includes('TabError')) {
-      return { status: 'CE', stderr: stderr.slice(0, 300) };
+      return { status: FAIL_TYPE.CE, stderr: stderr.slice(0, 300) };
     }
     // 运行异常
-    return { status: 'RE', stderr: stderr.slice(0, 300) };
+    return { status: FAIL_TYPE.RE, stderr: stderr.slice(0, 300) };
   }
 }
 
@@ -506,15 +509,15 @@ function shellQuote(s) {
 
 function runAllTests(code, testCases) {
   const results = testCases.map((tc) => runTestCase(code, tc));
-  const passCount = results.filter((r) => r.status === 'PASS').length;
+  const passCount = results.filter((r) => r.status === FAIL_TYPE.PASS).length;
   const statuses = new Set(results.map((r) => r.status));
 
-  let failType = 'PASS';
-  if (passCount === 0 && statuses.has('CE')) failType = 'CE';
+  let failType = FAIL_TYPE.PASS;
+  if (passCount === 0 && statuses.has(FAIL_TYPE.CE)) failType = FAIL_TYPE.CE;
   else if (passCount < results.length) {
-    if (statuses.has('RE')) failType = 'RE';
-    else if (statuses.has('TLE')) failType = 'TLE';
-    else failType = 'WA';
+    if (statuses.has(FAIL_TYPE.RE)) failType = FAIL_TYPE.RE;
+    else if (statuses.has(FAIL_TYPE.TLE)) failType = FAIL_TYPE.TLE;
+    else failType = FAIL_TYPE.WA;
   }
 
   return {
@@ -532,11 +535,11 @@ function runAllTests(code, testCases) {
 function scoreE(testResult) {
   const { passAll, compileError, onlyWA, withRE, withTLE } = CONFIG.penalty;
   if (!testResult) return 0;
-  if (testResult.failType === 'PASS') return passAll;
-  if (testResult.failType === 'CE') return compileError;
+  if (testResult.failType === FAIL_TYPE.PASS) return passAll;
+  if (testResult.failType === FAIL_TYPE.CE) return compileError;
   let penalty = onlyWA;
-  if (testResult.failType === 'RE') penalty = withRE;
-  else if (testResult.failType === 'TLE') penalty = withTLE;
+  if (testResult.failType === FAIL_TYPE.RE) penalty = withRE;
+  else if (testResult.failType === FAIL_TYPE.TLE) penalty = withTLE;
   return testResult.passRate * passAll * penalty;
 }
 
@@ -609,8 +612,9 @@ function printSummary(question, records) {
 
 // ───────────────────────── 记录序列化（SSOT）─────────────────────────
 // 单一真相源：record → JSON 字符串。appendRecord/updateQuestionRecords 共用
-function serializeRecord(question, r) {
+function serializeRecord(question, r, batchId) {
   return JSON.stringify({
+    batchId,
     questionId: question.questionId,
     questionTitle: question.questionTitle,
     difficulty: question.difficulty,
@@ -627,29 +631,32 @@ function serializeRecord(question, r) {
 }
 
 // 追加一条记录到 JSONL（逐个记录架构：每个模型完成立即 append）
-function appendRecord(resultsPath, question, r) {
-  writeFileSync(resultsPath, serializeRecord(question, r) + '\n', { flag: 'a' });
+function appendRecord(resultsPath, question, r, batchId) {
+  writeFileSync(resultsPath, serializeRecord(question, r, batchId) + '\n', { flag: 'a' });
 }
 
-// 更新 JSONL 中某题的记录：过滤掉该题旧记录，append 完整版（T/C/总分/baseline 已算完）
-// 多题串行下不清空整个文件，只替换当前题的行
-function updateQuestionRecords(resultsPath, question, records) {
+// 更新 JSONL 中该题该批次的记录：过滤掉同批次同题旧记录（stream 阶段写的无 T/C），append 完整版
+// 累积模式下保留其他批次同题记录，不清空整个文件
+function updateQuestionRecords(resultsPath, question, records, batchId) {
   let kept = [];
   if (existsSync(resultsPath)) {
     const content = readFileSync(resultsPath, 'utf8');
     kept = content.split('\n').filter((l) => l.trim()).filter((line) => {
-      try { return JSON.parse(line).questionId !== question.questionId; }
+      try {
+        const obj = JSON.parse(line);
+        return !(obj.batchId === batchId && obj.questionId === question.questionId);
+      }
       catch { return true; }
     });
   }
-  for (const r of records) kept.push(serializeRecord(question, r));
+  for (const r of records) kept.push(serializeRecord(question, r, batchId));
   writeFileSync(resultsPath, kept.length ? kept.join('\n') + '\n' : '');
 }
 
 // ───────────────────────── 单题评测（题内全流程）─────────────────────────
 // 复用现有 pi 驱动/采集/提取/测试/评分逻辑（SSOT，不复制）
 // 返回该题所有模型的 records（含 T/C/总分/baseline）
-async function runOneQuestion(question, timeoutSec, models, harness, resultsPath) {
+async function runOneQuestion(question, timeoutSec, models, harness, resultsPath, batchId) {
   console.log(`\n=== 题: ${question.questionId}（${question.difficulty} ${question.platform}）${question.questionTitle} | 超时 ${timeoutSec}s ===`);
 
   // 合并测试用例
@@ -676,13 +683,13 @@ async function runOneQuestion(question, timeoutSec, models, harness, resultsPath
         status: raw.status,
         _harness: harness,
         code: '',
-        testResult: raw.status === 'timeout' ? { failType: 'timeout', passRate: 0, passCount: 0, total: testCases.length, results: [] } : null,
+        testResult: raw.status === 'timeout' ? { failType: FAIL_TYPE.TIMEOUT, passRate: 0, passCount: 0, total: testCases.length, results: [] } : null,
         scores: { E: 0, T: null, C: null, total: 0 },
         baseline: null,
         metrics: null,
         detail: raw.detail,
       };
-      appendRecord(resultsPath, question, record);
+      appendRecord(resultsPath, question, record, batchId);
       console.log(`  [完成] ${raw.model} → ${raw.status}`);
       return record;
     }
@@ -705,7 +712,7 @@ async function runOneQuestion(question, timeoutSec, models, harness, resultsPath
       metrics: raw.metrics,
       detail: raw.detail,
     };
-    appendRecord(resultsPath, question, record);
+    appendRecord(resultsPath, question, record, batchId);
     console.log(`  [完成] ${raw.model} → ok | E=${E.toFixed(0)} 通过率=${(testResult.passRate * 100).toFixed(0)}%`);
     return record;
   })()));
@@ -728,7 +735,7 @@ async function runOneQuestion(question, timeoutSec, models, harness, resultsPath
   }
 
   // 更新 JSONL 中该题的记录（补充 T/C/总分/baseline，不影响其他题）
-  updateQuestionRecords(resultsPath, question, records);
+  updateQuestionRecords(resultsPath, question, records, batchId);
 
   // 每题汇总表
   printSummary(question, records);
@@ -817,17 +824,17 @@ async function main() {
   console.log(`模式: ${harness}${opts.mode ? ' | 标准模式' : ''} | 超时: ${items.map((it) => it.timeoutSec + 's').join('/')}`);
 
   // 建空 JSONL 文件（逐个记录架构：每个模型完成立即 append）
+  // 累积存储：固定 results.jsonl，不清空，靠 batchId 区分多次测试批次
   mkdirSync(RESULTS_DIR, { recursive: true });
-  const ts = new Date().toISOString().replace(/[:.]/g, '-');
-  const resultsPath = join(RESULTS_DIR, `eval-${ts}.jsonl`);
-  writeFileSync(resultsPath, '');
+  const batchId = new Date().toISOString().replace(/[:.]/g, '-');
+  const resultsPath = join(RESULTS_DIR, 'results.jsonl');
 
   // 题间串行，每题内 Promise.all 6模型并行
   const allResults = [];
   for (let i = 0; i < items.length; i++) {
     const { question, timeoutSec } = items[i];
     console.log(`\n[${i + 1}/${items.length}] 开始评测`);
-    const records = await runOneQuestion(question, timeoutSec, models, harness, resultsPath);
+    const records = await runOneQuestion(question, timeoutSec, models, harness, resultsPath, batchId);
     allResults.push({ question, records });
   }
 
