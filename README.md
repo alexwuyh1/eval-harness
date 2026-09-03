@@ -7,7 +7,8 @@ pi CLI 的多智能体编排扩展：给 pi 加上派生子智能体（身份声
 前置依赖：pi CLI（@earendil-works/pi-coding-agent）；DashScope API key 在 ~/.zshenv 的 `DASHSCOPE_CODING_KEY`；模型端点走 DashScope OpenAI 兼容模式。
 
 启动：
-- 前端可视化：`cd view && bun run dev`（同时起后端 API + Vite dev，浏览器开 localhost:5173）
+- 前端可视化：`cd view && bun run dev`（同时起后端 API + Vite dev）
+  - 访问：http://localhost:5173
   - 后台（不绑终端）：`cd view && bun run dev:bg`（tmux detach 会话），`bun run dev:attach` 看输出，`bun run dev:stop` 停
 - 交互式：`pi`（加载编排扩展+AGENTS+技能）
 - 评测框架：`npm run eval` 或 `node probe/eval.mjs [--mode standard] [--difficulty easy|medium|hard] [--question-id <id>]`
