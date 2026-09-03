@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently -n server,web -c blue,green \"bun run server.ts\" \"vite\"",
+    "dev:bg": "tmux new -d -s my-agent-view 'bun run dev'",
+    "dev:stop": "tmux kill-session -t my-agent-view 2>/dev/null || true",
+    "dev:attach": "tmux attach -t my-agent-view",
     "build": "vite build",
     "server": "bun run server.ts"
   },
