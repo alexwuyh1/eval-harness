@@ -530,17 +530,10 @@ function runAllTests(code, testCases) {
 }
 
 // ───────────────────────── 评分 ─────────────────────────
-// E（效果分，0-100）：全过=100，CE=10，部分通过=通过率×100×惩罚系数
-// 超时模型 E=0（不跑测试）
+// E（效果分，0-100）：通过用例数/总用例数 × 100。只有通过的用例得分，不区分失败类型（CE/RE/WA/TLE 均算未通过不得分）。超时模型 E=0（不跑测试）
 function scoreE(testResult) {
-  const { passAll, compileError, onlyWA, withRE, withTLE } = CONFIG.penalty;
   if (!testResult) return 0;
-  if (testResult.failType === FAIL_TYPE.PASS) return passAll;
-  if (testResult.failType === FAIL_TYPE.CE) return compileError;
-  let penalty = onlyWA;
-  if (testResult.failType === FAIL_TYPE.RE) penalty = withRE;
-  else if (testResult.failType === FAIL_TYPE.TLE) penalty = withTLE;
-  return testResult.passRate * passAll * penalty;
+  return testResult.passRate * CONFIG.penalty.passAll;
 }
 
 // clip(x, min, max)

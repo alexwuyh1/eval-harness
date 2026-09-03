@@ -5,11 +5,7 @@
     "costFactor": 50
   },
   "penalty": {
-    "passAll": 100,
-    "compileError": 10,
-    "onlyWA": 1.0,
-    "withRE": 0.8,
-    "withTLE": 0.9
+    "passAll": 100
   },
   "difficulties": ["easy", "medium", "hard"],
   "maxQuestions": 5,
