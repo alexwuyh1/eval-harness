@@ -4,13 +4,17 @@
       "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
       "api": "openai-completions",
       "apiKey": "$DASHSCOPE_CODING_KEY",
+      "compat": {
+        "requiresReasoningContentOnAssistantMessages": false,
+        "supportsDeveloperRole": false
+      },
       "models": [
         {
           "id": "deepseek-v4-flash-0731",
           "name": "DeepSeek V4 Flash (DashScope)",
           "reasoning": true,
           "input": ["text"],
-          "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+          "cost": { "input": 3, "output": 9, "cacheRead": 0.3, "cacheWrite": 0 },
           "contextWindow": 1000000,
           "maxTokens": 32000
         },
@@ -19,7 +23,7 @@
           "name": "DeepSeek V4 Pro (DashScope)",
           "reasoning": true,
           "input": ["text"],
-          "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+          "cost": { "input": 9, "output": 27, "cacheRead": 0.9, "cacheWrite": 0 },
           "contextWindow": 1000000,
           "maxTokens": 32000
         },
@@ -28,7 +32,25 @@
           "name": "GLM 5.2 (DashScope)",
           "reasoning": true,
           "input": ["text"],
-          "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+          "cost": { "input": 8, "output": 28, "cacheRead": 2, "cacheWrite": 0 },
+          "contextWindow": 1000000,
+          "maxTokens": 32000
+        },
+        {
+          "id": "glm-5.2-fast-preview",
+          "name": "GLM 5.2 Fast Preview (DashScope)",
+          "reasoning": true,
+          "input": ["text"],
+          "cost": { "input": 16, "output": 56, "cacheRead": 4, "cacheWrite": 0 },
+          "contextWindow": 1000000,
+          "maxTokens": 32000
+        },
+        {
+          "id": "xiaomi/mimo-v2.5-pro",
+          "name": "Xiaomi MiMo V2.5 Pro (DashScope)",
+          "reasoning": true,
+          "input": ["text"],
+          "cost": { "input": 7, "output": 21, "cacheRead": 1.4, "cacheWrite": 0 },
           "contextWindow": 1000000,
           "maxTokens": 32000
         },
@@ -37,7 +59,7 @@
           "name": "Kimi K3 (DashScope)",
           "reasoning": true,
           "input": ["text", "image"],
-          "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+          "cost": { "input": 20, "output": 100, "cacheRead": 2, "cacheWrite": 0 },
           "contextWindow": 1000000,
           "maxTokens": 32000
         },
@@ -46,7 +68,16 @@
           "name": "Qwen 3.8 Max (DashScope)",
           "reasoning": true,
           "input": ["text", "image"],
-          "cost": { "input": 0, "output": 0, "cacheRead": 0, "cacheWrite": 0 },
+          "cost": { "input": 12, "output": 36, "cacheRead": 1.2, "cacheWrite": 0 },
+          "contextWindow": 1000000,
+          "maxTokens": 32000
+        },
+        {
+          "id": "qwen3.8-flash",
+          "name": "Qwen 3.8 Flash (DashScope)",
+          "reasoning": true,
+          "input": ["text", "image"],
+          "cost": { "input": 0.8, "output": 2.7, "cacheRead": 0.08, "cacheWrite": 0 },
           "contextWindow": 1000000,
           "maxTokens": 32000
         }
