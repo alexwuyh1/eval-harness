@@ -476,7 +476,7 @@ function extractCodeHarness(text, writePyContents) {
 
 // ───────────────────────── 测试执行 ─────────────────────────
 function runTestCase(code, tc) {
-  if (!code.trim()) return { status: 'CE', stderr: '无代码' };
+  if (!code.trim()) return { status: FAIL_TYPE.CE, stderr: '无代码' };
 
   const fileId = randomUUID();
   const filePath = `/tmp/eval_${fileId}.py`;
@@ -489,7 +489,7 @@ function runTestCase(code, tc) {
     );
     const actual = (result ?? '').trim();
     const expected = (tc.output ?? '').trim();
-    return actual === expected ? { status: 'PASS' } : { status: 'WA', actual, expected };
+    return actual === expected ? { status: FAIL_TYPE.PASS } : { status: FAIL_TYPE.WA, actual, expected };
   } catch (err) {
     const stderr = (err.stderr ?? '').toString();
     // 超时
