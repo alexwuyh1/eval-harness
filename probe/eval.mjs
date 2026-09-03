@@ -20,16 +20,14 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = resolve(__dirname, '..');
 const DATASET_PATH = join(__dirname, 'datasets', 'livecodebench', 'livecodebench.jsonl');
 const RESULTS_DIR = join(__dirname, 'results');
+const CONFIG_PATH = join(__dirname, 'eval.config.json');
 
 // harness 模式固定路径
 const EXTENSION_PATH = '/Users/apple/Program/my-agent/extensions/index.ts';
 const AGENTS_MD_PATH = '/Users/apple/知识库/技能/AGENTS.md';
 
-// 默认超时（秒）：裸跑 5 分钟，harness 10 分钟
-const DEFAULT_TIMEOUT_BARE = 300;
-const DEFAULT_TIMEOUT_HARNESS = 600;
-// 标准模式超时（秒）：按难度递增，medium 10 分钟，hard 15 分钟（裸跑默认）
-const STANDARD_TIMEOUTS = { medium: 600, hard: 900 };
+// 测试配置（eval.config.json）：评分权重/惩罚系数/超时/难度/标准模式/maxQuestions，调参不改代码
+const CONFIG = JSON.parse(readFileSync(CONFIG_PATH, 'utf8'));
 
 // ───────────────────────── CLI 参数 ─────────────────────────
 // CLI flag 配置表：flag名 → { key, type, default }。parseArgs 遍历匹配，无 if/else 链
@@ -101,11 +99,11 @@ function sampleQuestions(pool, n, timeoutSec) {
 function validateDifficultyList(difficultyStr, count) {
   const difficulties = difficultyStr.split(',').map((s) => s.trim()).filter(Boolean);
   for (const d of difficulties) {
-    if (!['easy', 'medium', 'hard'].includes(d)) throw new Error(`未知难度: ${d}（应为 easy/medium/hard）`);
+    if (!CONFIG.difficulties.includes(d)) throw new Error(`未知难度: ${d}（应为 ${CONFIG.difficulties.join('/')}）`);
   }
   if (!Number.isInteger(count) || count < 1) throw new Error(`--count 应为正整数，当前: ${count}`);
   const total = difficulties.length * count;
-  if (total > 5) throw new Error(`总题数 ${total} 超过上限 5`);
+  if (total > CONFIG.maxQuestions) throw new Error(`总题数 ${total} 超过上限 ${CONFIG.maxQuestions}`);
   return difficulties;
 }
 
@@ -116,15 +114,18 @@ function pickByQuestionId(all, opts, defaultTimeout) {
   return [{ question: normalizeQuestion(row), timeoutSec: defaultTimeout }];
 }
 
-// --mode standard：medium 随机 1 + hard 随机 1（超时 medium 600s/hard 900s）
+// --mode standard：按 config.standardMode 抽题（默认 medium 1 + hard 1），超时按难度从 config.timeouts 读
 function pickStandard(all, opts) {
-  const mediums = all.filter((q) => q.difficulty === 'medium');
-  const hards = all.filter((q) => q.difficulty === 'hard');
-  if (mediums.length === 0) throw new Error('难度 medium 无可用题');
-  if (hards.length === 0) throw new Error('难度 hard 无可用题');
-  const m = sampleQuestions(mediums, 1, opts.timeout ?? STANDARD_TIMEOUTS.medium);
-  const h = sampleQuestions(hards, 1, opts.timeout ?? STANDARD_TIMEOUTS.hard);
-  return [...m, ...h];
+  const harnessKey = opts.harness === 'harness' ? 'harness' : 'bare';
+  const timeouts = CONFIG.timeouts[harnessKey];
+  const result = [];
+  for (const spec of CONFIG.standardMode) {
+    const pool = all.filter((q) => q.difficulty === spec.difficulty);
+    if (pool.length === 0) throw new Error(`难度 ${spec.difficulty} 无可用题`);
+    if (pool.length < spec.count) throw new Error(`难度 ${spec.difficulty} 只有 ${pool.length} 题，不足 ${spec.count}`);
+    result.push(...sampleQuestions(pool, spec.count, opts.timeout ?? timeouts[spec.difficulty]));
+  }
+  return result;
 }
 
 // --difficulty <列表> --count <n>：每难度抽 count 道
@@ -155,7 +156,8 @@ function pickDefault(all, defaultTimeout) {
 // --timeout 统一覆盖所有题的超时
 function pickQuestions(opts, harness) {
   const all = loadLiveCodeBench();
-  const defaultTimeout = opts.timeout ?? (harness === 'harness' ? DEFAULT_TIMEOUT_HARNESS : DEFAULT_TIMEOUT_BARE);
+  const harnessKey = harness === 'harness' ? 'harness' : 'bare';
+  const defaultTimeout = opts.timeout ?? CONFIG.timeouts[harnessKey].default;
   if (opts.questionId) return pickByQuestionId(all, opts, defaultTimeout);
   if (opts.mode === 'standard') return pickStandard(all, opts);
   if (opts.difficulty) return pickByDifficultyList(all, opts, defaultTimeout);
@@ -528,13 +530,14 @@ function runAllTests(code, testCases) {
 // E（效果分，0-100）：全过=100，CE=10，部分通过=通过率×100×惩罚系数
 // 超时模型 E=0（不跑测试）
 function scoreE(testResult) {
+  const { passAll, compileError, onlyWA, withRE, withTLE } = CONFIG.penalty;
   if (!testResult) return 0;
-  if (testResult.failType === 'PASS') return 100;
-  if (testResult.failType === 'CE') return 10;
-  let penalty = 1.0;
-  if (testResult.failType === 'RE') penalty = 0.8;
-  else if (testResult.failType === 'TLE') penalty = 0.9;
-  return testResult.passRate * 100 * penalty;
+  if (testResult.failType === 'PASS') return passAll;
+  if (testResult.failType === 'CE') return compileError;
+  let penalty = onlyWA;
+  if (testResult.failType === 'RE') penalty = withRE;
+  else if (testResult.failType === 'TLE') penalty = withTLE;
+  return testResult.passRate * passAll * penalty;
 }
 
 // clip(x, min, max)
@@ -542,16 +545,16 @@ function clip(x, min, max) {
   return Math.max(min, Math.min(max, x));
 }
 
-// T（速度分，0-100）：clip(中位耗时/模型耗时×50, 0, 100)
+// T（速度分，0-100）：clip(中位耗时/模型耗时×speedFactor, 0, 100)
 function scoreT(modelMs, medianMs) {
   if (modelMs === null || modelMs <= 0 || medianMs <= 0) return 0;
-  return clip(medianMs / modelMs * 50, 0, 100);
+  return clip(medianMs / modelMs * CONFIG.scoring.speedFactor, 0, 100);
 }
 
-// C（成本分，0-100）：clip(中位成本/模型成本×50, 0, 100)
+// C（成本分，0-100）：clip(中位成本/模型成本×costFactor, 0, 100)
 function scoreC(modelCost, medianCost) {
   if (modelCost <= 0 || medianCost <= 0) return 0;
-  return clip(medianCost / modelCost * 50, 0, 100);
+  return clip(medianCost / modelCost * CONFIG.scoring.costFactor, 0, 100);
 }
 
 function median(arr) {
@@ -596,7 +599,8 @@ function printSummary(question, records) {
   const header = `模型${' '.repeat(22)}E分  T分  C分  总分  通过率   失败 TTFT 思考ms token比 吞吐 总ms  token  缓存 命率 成本`;
   console.log('\n' + '='.repeat(header.length));
   console.log(`P1.1 评测汇总（题: ${question.questionId} ${question.difficulty} ${question.platform}）[${records[0]?._harness ?? 'bare'}]`);
-  console.log('E=效果分 T=速度分 C=成本分 总分=E×(0.6+0.3×T/100+0.1×C/100) | TTFT=首token(ms) 思考=思考时间(ms) token比=思考/总 吞吐=tok/s 总ms=总耗时 缓存=缓存命中 成本=元');
+  const { effect, speed, cost } = CONFIG.scoring.weights;
+  console.log(`E=效果分 T=速度分 C=成本分 总分=E×(${effect}+${speed}×T/100+${cost}×C/100) | TTFT=首token(ms) 思考=思考时间(ms) token比=思考/总 吞吐=tok/s 总ms=总耗时 缓存=缓存命中 成本=元`);
   console.log('='.repeat(header.length));
   console.log(header);
   console.log('-'.repeat(header.length));
@@ -715,7 +719,8 @@ async function runOneQuestion(question, timeoutSec, models, harness, resultsPath
     if (r.status !== 'ok') continue;
     const T = scoreT(r.metrics.totalMs, medianMs);
     const C = scoreC(r.metrics.cost, medianCost);
-    const total = r.scores.E * (0.6 + 0.3 * T / 100 + 0.1 * C / 100);
+    const { effect, speed, cost } = CONFIG.scoring.weights;
+    const total = r.scores.E * (effect + speed * T / 100 + cost * C / 100);
     r.scores.T = Number(T.toFixed(2));
     r.scores.C = Number(C.toFixed(2));
     r.scores.total = Number(total.toFixed(2));
@@ -775,7 +780,8 @@ function printOverallSummary(questions, allResults) {
   const bar = '='.repeat(header.length);
   console.log('\n' + bar);
   console.log('P1.1 总汇总（多题平均 + 分难度明细）');
-  console.log('总分=E×(0.6+0.3×T/100+0.1×C/100) | 非ok 记录按 0 分计入平均 | 平均=各题总分算术平均');
+  const { effect, speed, cost } = CONFIG.scoring.weights;
+  console.log(`总分=E×(${effect}+${speed}×T/100+${cost}×C/100) | 非ok 记录按 0 分计入平均 | 平均=各题总分算术平均`);
   console.log(bar);
   console.log(header);
   console.log('-'.repeat(header.length));
