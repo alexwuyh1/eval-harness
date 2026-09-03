@@ -1,0 +1,35 @@
+{
+  "providers": {
+    "dashscope": {
+      "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      "api": "openai-completions",
+      "apiKey": "$DASHSCOPE_CODING_KEY",
+      "compat": {
+        "requiresReasoningContentOnAssistantMessages": false,
+        "supportsDeveloperRole": false
+      },
+      "models": [
+        {
+          "id": "xiaomi/mimo-v2.5-pro",
+          "name": "Xiaomi MiMo V2.5 Pro (DashScope)",
+          "reasoning": true,
+          "input": ["text"],
+          "cost": { "input": 7, "output": 21, "cacheRead": 1.4, "cacheWrite": 0 },
+          "contextWindow": 1000000,
+          "maxTokens": 32000,
+          "disabledReason": "403 Model.AccessDenied：CODING key 无权限访问"
+        },
+        {
+          "id": "qwen3.8-flash",
+          "name": "Qwen 3.8 Flash (DashScope)",
+          "reasoning": true,
+          "input": ["text", "image"],
+          "cost": { "input": 0.8, "output": 2.7, "cacheRead": 0.08, "cacheWrite": 0 },
+          "contextWindow": 1000000,
+          "maxTokens": 32000,
+          "disabledReason": "403 Model.AccessDenied：CODING key 无权限访问"
+        }
+      ]
+    }
+  }
+}
