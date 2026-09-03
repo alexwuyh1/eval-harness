@@ -1,0 +1,25 @@
+{
+  "name": "view",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "server": "bun run server.ts"
+  },
+  "dependencies": {
+    "preact": "^10.25.2"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "^2.9.1",
+    "@types/bun": "^1.1.0",
+    "@typescript-eslint/eslint-plugin": "^8.69.0",
+    "@typescript-eslint/parser": "^8.69.0",
+    "eslint": "^10.9.1",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.69.0",
+    "unocss": "^0.65.1",
+    "vite": "^6.0.5"
+  }
+}

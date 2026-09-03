@@ -1,20 +1,44 @@
 {
   "scoring": {
-    "weights": { "effect": 0.6, "speed": 0.3, "cost": 0.1 },
+    "weights": {
+      "effect": 0.6,
+      "speed": 0.3,
+      "cost": 0.1
+    },
     "speedFactor": 50,
     "costFactor": 50
   },
   "penalty": {
     "passAll": 100
   },
-  "difficulties": ["easy", "medium", "hard"],
+  "difficulties": [
+    "easy",
+    "medium",
+    "hard"
+  ],
   "maxQuestions": 5,
   "timeouts": {
-    "bare": { "default": 300, "easy": 300, "medium": 600, "hard": 900 },
-    "harness": { "default": 600, "easy": 600, "medium": 1200, "hard": 1800 }
+    "bare": {
+      "default": 300,
+      "easy": 300,
+      "medium": 600,
+      "hard": 900
+    },
+    "harness": {
+      "default": 600,
+      "easy": 600,
+      "medium": 1200,
+      "hard": 1800
+    }
   },
   "standardMode": [
-    { "difficulty": "medium", "count": 1 },
-    { "difficulty": "hard", "count": 1 }
+    {
+      "difficulty": "medium",
+      "count": 1
+    },
+    {
+      "difficulty": "hard",
+      "count": 1
+    }
   ]
 }
