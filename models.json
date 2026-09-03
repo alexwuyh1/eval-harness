@@ -45,15 +45,7 @@
           "contextWindow": 1000000,
           "maxTokens": 32000
         },
-        {
-          "id": "xiaomi/mimo-v2.5-pro",
-          "name": "Xiaomi MiMo V2.5 Pro (DashScope)",
-          "reasoning": true,
-          "input": ["text"],
-          "cost": { "input": 7, "output": 21, "cacheRead": 1.4, "cacheWrite": 0 },
-          "contextWindow": 1000000,
-          "maxTokens": 32000
-        },
+
         {
           "id": "kimi-k3",
           "name": "Kimi K3 (DashScope)",
@@ -69,15 +61,6 @@
           "reasoning": true,
           "input": ["text", "image"],
           "cost": { "input": 12, "output": 36, "cacheRead": 1.2, "cacheWrite": 0 },
-          "contextWindow": 1000000,
-          "maxTokens": 32000
-        },
-        {
-          "id": "qwen3.8-flash",
-          "name": "Qwen 3.8 Flash (DashScope)",
-          "reasoning": true,
-          "input": ["text", "image"],
-          "cost": { "input": 0.8, "output": 2.7, "cacheRead": 0.08, "cacheWrite": 0 },
           "contextWindow": 1000000,
           "maxTokens": 32000
         }
