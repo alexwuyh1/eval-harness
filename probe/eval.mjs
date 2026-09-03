@@ -563,21 +563,28 @@ function median(arr) {
 // ───────────────────────── 汇总表 ─────────────────────────
 function formatOkRow(r) {
   const m = r.metrics;
-  const E = r.scores.E.toFixed(0).padStart(4);
-  const T = r.scores.T.toFixed(0).padStart(4);
-  const C = r.scores.C.toFixed(0).padStart(4);
-  const total = r.scores.total.toFixed(1).padStart(5);
-  const passRate = (r.testResult.passRate * 100).toFixed(0).padStart(3) + '%';
-  const failType = r.testResult.failType.padEnd(4);
-  const ttft = String(m.ttftMs ?? '-').padStart(5);
-  const think = String(m.thinkMs ?? '-').padStart(6);
-  const tokenRatio = (m.tokenRatio * 100).toFixed(0).padStart(4) + '%';
-  const tps = String(m.tps ?? '-').padStart(5);
-  const totalMs = String(m.totalMs ?? '-').padStart(5);
-  const tokens = String(m.totalTokens ?? '-').padStart(6);
-  const cache = (m.cacheHitRate * 100).toFixed(0).padStart(3) + '%';
-  const cost = m.cost.toFixed(4).padStart(7);
-  return r.model.padEnd(24) + `${E} ${T} ${C} ${total}  ${passRate}  ${failType} ${ttft} ${think} ${tokenRatio} ${tps} ${totalMs} ${tokens} ${cache} ${cost}`;
+  const E = r.scores.E.toFixed(0);
+  const T = r.scores.T.toFixed(0);
+  const C = r.scores.C.toFixed(0);
+  const total = r.scores.total.toFixed(1);
+  const passRate = (r.testResult.passRate * 100).toFixed(0) + '%';
+  const failType = r.testResult.failType;
+  const ttft = String(m.ttftMs ?? '-');
+  const tps = String(m.tps ?? '-');
+  const totalMs = String(m.totalMs ?? '-');
+  const thinkPct = (m.tokenRatio * 100).toFixed(0) + '%';
+  const tokens = String(m.totalTokens ?? '-');
+  const cache = (m.cacheHitRate * 100).toFixed(0) + '%';
+  const cost = m.cost.toFixed(4);
+  // 对齐前端表格设计：总分(E,T,C) | 通过率(类型) | 总耗时(思考百分比) | 总成本(元) | 总token(缓存命中率) | TTFT | 吞吐
+  return r.model.padEnd(24)
+    + `${total}(${E},${T},${C})`.padEnd(16)
+    + `${passRate}(${failType})`.padEnd(14)
+    + `${totalMs}ms(${thinkPct})`.padEnd(16)
+    + `${cost}元`.padEnd(12)
+    + `${tokens}(${cache})`.padEnd(14)
+    + `${ttft}`.padStart(8)
+    + `${tps}`.padStart(8);
 }
 
 function formatNonOkRow(r, label) {
@@ -592,11 +599,11 @@ function formatRow(r) {
 }
 
 function printSummary(question, records) {
-  const header = `模型${' '.repeat(22)}E分  T分  C分  总分  通过率   失败 TTFT 思考ms token比 吞吐 总ms  token  缓存 命率 成本`;
+  const header = '模型' + ' '.repeat(22) + '总分(E,T,C)    通过率(类型)   总耗时(思考%)    总成本(元)   总token(缓存)  TTFT   吞吐';
   console.log('\n' + '='.repeat(header.length));
   console.log(`P1.1 评测汇总（题: ${question.questionId} ${question.difficulty} ${question.platform}）[${records[0]?._harness ?? 'bare'}]`);
   const { effect, speed, cost } = CONFIG.scoring.weights;
-  console.log(`E=效果分 T=速度分 C=成本分 总分=E×(${effect}+${speed}×T/100+${cost}×C/100) | TTFT=首token(ms) 思考=思考时间(ms) token比=思考/总 吞吐=tok/s 总ms=总耗时 缓存=缓存命中 成本=元`);
+  console.log(`总分=E×(${effect}+${speed}×T/100+${cost}×C/100) | 通过率=通过用例/总用例 | 思考%=思考token占比 | 总token=输入+输出 | 缓存=缓存命中 | TTFT=首token(ms) | 吞吐=tok/s`);
   console.log('='.repeat(header.length));
   console.log(header);
   console.log('-'.repeat(header.length));
