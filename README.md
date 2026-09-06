@@ -1,37 +1,32 @@
 # my-agent
 
-pi CLI 的多智能体编排扩展：给 pi 加上派生子智能体（身份声明自动注入）、session 续聊、任务池调度基础，让规范+技能体系脱离 Zed 独立运行。同一套编排代码也支撑模型评测（裸跑模式）。
+pi 驱动的模型智能体评测框架：HumanEval+ 多轮对话评测，二维评分（功能正确性 + 健壮性），支持任意模型 × 智能体形态矩阵。
 
-## 怎么跑
+## 1 怎么跑
 
-前置依赖：pi CLI（@earendil-works/pi-coding-agent）；DashScope API key 在 ~/.zshenv 的 `DASHSCOPE_CODING_KEY`；模型端点走 DashScope OpenAI 兼容模式。
+前置依赖：pi CLI（@earendil-works/pi-coding-agent）；DashScope API key 在 ~/.zshenv 的 `DASHSCOPE_CODING_KEY`。
 
-启动：
-- 前端可视化：`cd view && bun run dev`（同时起后端 API + Vite dev）
-  - 访问：http://localhost:5173
-  - 后台（不绑终端）：`cd view && bun run dev:bg`（tmux detach 会话），`bun run dev:attach` 看输出，`bun run dev:stop` 停
-- 交互式：`pi`（加载编排扩展+AGENTS+技能）
-- 评测框架：`npm run eval` 或 `node probe/eval.mjs [--mode standard] [--difficulty easy|medium|hard] [--question-id <id>]`
-- 旧探针：`npm run probe`（API 层性能基线）
+启动：`node probe/eval.mjs [选项]`
 
-规范、技能、扩展、models.json 全部常驻在 `~/.pi/agent/` 和 `~/.agents/skills/` 的 symlink 上，无需启动参数。
+访问：无 web 界面（终端汇总表 + JSONL）；前端可视化在 `view/`（`cd view && bun run dev`，访问 http://localhost:5173）
 
-## 目录结构
+## 2 目录结构
 
 ```
 my-agent/
 ├── models.json        # 模型+端点+价格配置（改模型/换端点/调价格改这里；apiKey 只含 $ENV 引用，真值不落盘）
-├── package.json       # 顶层 script（eval/probe）
-├── extensions/        # 编排机制层：spawn_agent、续聊、身份声明注入（改编排能力改 index.ts）
+├── package.json       # 顶层 script（eval）
 ├── probe/
-│   ├── eval.mjs       # P1.1 统一评测框架（pi CLI 驱动，多模型并行，采集指标+执行测试用例+评分）
-│   ├── eval.config.json # 测试参数（权重/惩罚/超时/难度/标准模式，调参不改代码）
-│   ├── probe.mjs      # 旧探针（HTTP 流式，API 层性能基线）
-│   ├── datasets/      # 数据集（humaneval/livecodebench，首次运行自动下载，gitignore）
-│   └── results/       # 测试产物 JSONL（累积，gitignore）
+│   ├── eval.mjs       # 评测框架（pi RPC 多轮对话：发题→agent 出码→跑 base/plus 测试→未全通过反馈→agent 修正，最多 maxTurns 轮）
+│   ├── eval.config.json # 测试参数（agentProfiles/models/thinking/maxTurns/二维评分权重/超时，调参不改代码）
+│   ├── datasets/      # HumanEval+ 数据集（humanevalplus/humanevalplus.jsonl，含 baseTest+test，gitignore）
+│   └── results/       # 测试产物 JSONL（累积，按 batchId 区分批次，gitignore）
 ├── view/              # P3 前端可视化（bun+Vite+UnoCSS+Preact）
-├── models-archive.json # 放弃用模型归档（无权限，开通后取回 models.json）
-└── test-lab/          # P0 编排自测沙盒（run-tests.sh 验证 C1-C6）
+└── models-archive.json # 放弃用模型归档（无权限，开通后取回 models.json）
 ```
+
+评测对象矩阵 = `agentProfiles × models`（config 驱动）。CLI 可限定子集：`--profile bare,harness --model glm-5.2-fast-preview,deepseek-v4-flash-0731`。
+
+评分二维：E₁（功能正确性，base test 通过 100/0）+ E₂（健壮性，plus test 通过 100/0），加权合成 E；T（速度）/C（成本）用参测单元中位数基线，单单元参测时置 null。
 
 规则层（规范/技能）不在本仓库：在知识库，经 symlink 常驻到 `~/.pi/agent/` 和 `~/.agents/skills/`。改流程规则去知识库改，改完 Zed 和 pi 同时生效。

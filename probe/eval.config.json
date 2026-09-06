@@ -1,44 +1,38 @@
 {
-  "scoring": {
-    "weights": {
-      "effect": 0.6,
-      "speed": 0.3,
-      "cost": 0.1
-    },
-    "speedFactor": 50,
-    "costFactor": 50
-  },
-  "penalty": {
-    "passAll": 100
-  },
-  "difficulties": [
-    "easy",
-    "medium",
-    "hard"
-  ],
-  "maxQuestions": 5,
-  "timeouts": {
+  "agentProfiles": {
     "bare": {
-      "default": 300,
-      "easy": 300,
-      "medium": 600,
-      "hard": 900
+      "description": "纯内建工具基线，无扩展无技能无上下文",
+      "noExtensions": true,
+      "noSkills": true,
+      "noContextFiles": true
     },
     "harness": {
-      "default": 600,
-      "easy": 600,
-      "medium": 1200,
-      "hard": 1800
+      "description": "pi 真实环境，自动加载已安装 extensions/skills/context"
     }
   },
-  "standardMode": [
-    {
-      "difficulty": "medium",
-      "count": 1
-    },
-    {
-      "difficulty": "hard",
-      "count": 1
-    }
-  ]
+  "models": [
+    "dashscope/deepseek-v4-flash-0731",
+    "dashscope/deepseek-v4-pro-0813",
+    "dashscope/glm-5.2",
+    "dashscope/glm-5.2-fast-preview",
+    "dashscope/kimi-k3",
+    "dashscope/qwen3.8-max"
+  ],
+  "thinking": "high",
+  "maxTurns": 3,
+  "concurrency": 6,
+  "feedbackSampleCount": 3,
+  "maxQuestions": 10,
+  "standardCount": 3,
+  "timeouts": {
+    "perTurn": 300,
+    "total": 900
+  },
+  "scoring": {
+    "weights": { "effect": 0.6, "speed": 0.3, "cost": 0.1 },
+    "effectWeights": { "functional": 0.5, "robust": 0.5 },
+    "turnDecay": true,
+    "speedFactor": 50,
+    "costFactor": 50
+  }
 }

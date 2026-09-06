@@ -3,9 +3,8 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "pi 编排扩展：spawn_agent 派生/续聊子智能体",
+  "description": "pi 驱动的模型智能体评测框架：HumanEval+ 多轮对话评测，二维功能/健壮评分",
   "scripts": {
-    "probe": "node probe/probe.mjs",
     "eval": "node probe/eval.mjs"
   }
 }

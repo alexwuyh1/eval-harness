@@ -4,5 +4,5 @@ node_modules/
 # 密钥不落盘：models.json 只含 $ENV 引用，真值在 ~/.zshrc
 # 测试产物：每次运行产生独立 perf-*.jsonl，不提交
 probe/results/
-# 数据集：体积大，首次运行自动下载
-probe/datasets/
+# 数据集：体积大，首次运行自动下载（忽略 jsonl 数据，保留 adapter.mjs 代码）
+probe/datasets/**/*.jsonl
